@@ -1,0 +1,395 @@
+diff --git a/src/mobility/rwp/NodeRWP.java b/src/mobility/rwp/NodeRWP.java
+index e6779e2..da2b2b0 100644
+--- a/src/mobility/rwp/NodeRWP.java
++++ b/src/mobility/rwp/NodeRWP.java
+@@ -110,10 +110,31 @@ public class NodeRWP extends MobileNode {
+ 					Join join = new Join(this, 0.0, Simulator.size*initX, Simulator.size*initY);
+ 					addEvent(join);
+ 					
++
++//					Move move = new Move(this, 0.0, join.x, join.y, Simulator.size*x2, Simulator.size*y2, initSpeed);
++//					addEvent(move);
++
+ 					// node movement
+-					Move move = new Move(this, 0.0, join.x, join.y, Simulator.size*x2, Simulator.size*y2, initSpeed);
+-					addEvent(move);
+-					
++					double curTime = 0;
++					double startX = join.x;
++					double startY = join.y;
++					double endX = Simulator.size*x2;
++					double endY = Simulator.size*y2;
++
++					double curX;
++					double curY;
++					double prevX = startX;
++					double prevY = startY;
++
++					while (curTime < Simulator.duration) {
++						curX = startX + (endX - startX)*(curTime/Simulator.duration);
++						curY = startY + (endY - startY)*(curTime/Simulator.duration);
++						Move move = new Move(this, 0.0, prevX, prevY, curX, curY, initSpeed);
++						addEvent(move);
++						prevX = curX;
++						prevY = curY;
++						curTime++;
++					}
+ 				}
+ 									
+ 			}
+diff --git a/src/output/XMLFormatter.java b/src/output/XMLFormatter.java
+index 9a13934..be335cf 100644
+--- a/src/output/XMLFormatter.java
++++ b/src/output/XMLFormatter.java
+@@ -1,40 +1,43 @@
+ /* Copyright (c) 2007-2009, Computer Engineering and Networks Laboratory (TIK), ETH Zurich.
+-*  All rights reserved.
+-*
+-*  Redistribution and use in source and binary forms, with or without
+-*  modification, are permitted provided that the following conditions
+-*  are met:
+-*
+-*  1. Redistributions of source code must retain the above copyright
+-*     notice, this list of conditions and the following disclaimer.
+-*  2. Redistributions in binary form must reproduce the above copyright
+-*     notice, this list of conditions and the following disclaimer in the
+-*     documentation and/or other materials provided with the distribution.
+-*  3. Neither the name of the copyright holders nor the names of
+-*     contributors may be used to endorse or promote products derived
+-*     from this software without specific prior written permission.
+-*
+-*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS `AS IS'
+-*  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+-*  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+-*  ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
+-*  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+-*  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, LOSS OF USE, DATA,
+-*  OR PROFITS) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+-*  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+-*  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+-*  THE POSSIBILITY OF SUCH DAMAGE.
+-*
+-*  @author Philipp Sommer <phsommer@users.sourceforge.net>
+-* 
+-*/
++ *  All rights reserved.
++ *
++ *  Redistribution and use in source and binary forms, with or without
++ *  modification, are permitted provided that the following conditions
++ *  are met:
++ *
++ *  1. Redistributions of source code must retain the above copyright
++ *     notice, this list of conditions and the following disclaimer.
++ *  2. Redistributions in binary form must reproduce the above copyright
++ *     notice, this list of conditions and the following disclaimer in the
++ *     documentation and/or other materials provided with the distribution.
++ *  3. Neither the name of the copyright holders nor the names of
++ *     contributors may be used to endorse or promote products derived
++ *     from this software without specific prior written permission.
++ *
++ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS `AS IS'
++ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ *  ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS
++ *  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, LOSS OF USE, DATA,
++ *  OR PROFITS) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
++ *  THE POSSIBILITY OF SUCH DAMAGE.
++ *
++ *  @author Philipp Sommer <phsommer@users.sourceforge.net>
++ *
++ */
+ package output;
+ 
+ import java.io.*;
+ import java.util.*;
++import java.util.logging.*;
+ 
++import event.Event;
++import event.Move;
++import event.Pause;
+ import simulator.*;
+-import event.*;
+ 
+ /**
+  * XMLFormatter generates a XML file with mobility traces.
+@@ -43,102 +46,147 @@ import event.*;
+  */
+ public class XMLFormatter extends TraceFormatter {
+ 
+-	
++	private final Logger logger =
++			Logger.getLogger(this.getClass().getSimpleName());
++
+ 	public void finish() {
+-		
++
+ 		// sort all events by node identifier and start time
+ 		Collections.sort(Simulator.events, new EventComparatorByNodeIdByStartTime());
+-		
++
+ 		try {
+-			
+-			BufferedWriter writer = new BufferedWriter(new FileWriter(new File(Simulator.outputDirectory + "/trace.xml")));
+-			
+-			writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+-			writer.write("<traces xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"traces.xsd\">\n");
+-			
++			String fileName = "/trace-" + System.currentTimeMillis() + ".xml";
++//			BufferedWriter writer = new BufferedWriter(new FileWriter(new File(Simulator.outputDirectory + fileName)));
++			DataOutputStream dataOutput = new DataOutputStream(new FileOutputStream(Simulator.outputDirectory + fileName));
++
++			//writing hyperparameters
++//			dataOutput.writeChars(Integer.toBinaryString(Simulator.uniqueNodes));
++//			dataOutput.writeChars(Integer.toBinaryString((int) Simulator.duration));
++			dataOutput.writeInt(Simulator.uniqueNodes);
++			dataOutput.writeInt((int) Simulator.duration);
++
++			//writing mbr
++//			dataOutput.writeChars(Long.toBinaryString(Double.doubleToRawLongBits(0.0)));
++//			dataOutput.writeChars(Long.toBinaryString(Double.doubleToRawLongBits(0.0)));
++//			dataOutput.writeChars(Long.toBinaryString(Double.doubleToRawLongBits(Simulator.size)));
++//			dataOutput.writeChars(Long.toBinaryString(Double.doubleToRawLongBits(Simulator.size)));
++			dataOutput.writeDouble(0.0);
++			dataOutput.writeDouble(0.0);
++			dataOutput.writeDouble(Simulator.size);
++			dataOutput.writeDouble(Simulator.size);
++
++//			writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
++//			writer.write("<traces xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"traces.xsd\">\n");
++//
+ 			// output paths of all nodes
+ 			Iterator<Event> it = Simulator.events.iterator();
+ 			int lastNodeId = -1;
+-			
++
+ 			while (it.hasNext()) {
+-				
++
+ 				Event event = it.next();
+-				
++
+ 				if (event.node.id!=lastNodeId) {
+-					
+-					if (lastNodeId!=-1) {
+-						writer.write("    </events>\n");
+-						writer.write("  </node>\n");
+-					}
+-					
+-					// next node
+-					writer.write("  <node id=\"" + event.node.id + "\">\n");
+-					writer.write("    <events>\n");
+-	 			
++
++//					if (lastNodeId!=-1) {
++//						writer.write("    </events>\n");
++//						writer.write("  </node>\n");
++//					}
++//
++//					// next node
++//					writer.write("  <node id=\"" + event.node.id + "\">\n");
++//					writer.write("    <events>\n");
++
+ 					lastNodeId = event.node.id;
+ 				}
+-				
++
+ 				if (event.type==Event.MOVE) {
+ 					Move temp = (Move) event;
+-					
+-					writer.write("      <move>\n");
+-					writer.write("        <start>\n");
+-					writer.write("          <time>" + String.format("%.2f",temp.time) + "</time>\n");
+-					writer.write("          <x>" + String.format("%.2f",temp.x) + "</x>\n");
+-					writer.write("          <y>" + String.format("%.2f",temp.y) + "</y>\n");
+-					writer.write("        </start>\n");
+-					writer.write("        <stop>\n");
+-					writer.write("          <time>" + String.format("%.2f", temp.time + temp.duration) + "</time>\n");
+-					writer.write("          <x>" + String.format("%.2f", temp.moveToX) + "</x>\n");
+-					writer.write("          <y>" + String.format("%.2f",temp.moveToY) + "</y>\n");
+-					writer.write("        </stop>\n");
+-					writer.write("      </move>\n");
+-					
+-					
++
++//					writer.write("      <move>\n");
++//					writer.write("        <start>\n");
++//					writer.write("          <time>" + String.format("%.2f",temp.time) + "</time>\n");
++//					writer.write("          <x>" + String.format("%.2f",temp.x) + "</x>\n");
++//					writer.write("          <y>" + String.format("%.2f",temp.y) + "</y>\n");
++//					writer.write("        </start>\n");
++//					writer.write("        <stop>\n");
++//					writer.write("        g  <time>" + String.format("%.2f", temp.time + temp.duration) + "</time>\n");
++//					writer.write("          <x>" + String.format("%.2f", temp.moveToX) + "</x>\n");
++//					writer.write("          <y>" + String.format("%.2f",temp.moveToY) + "</y>\n");
++//					writer.write("        </stop>\n");
++//					writer.write("      </move>\n");
++//					writer.write(String.format("%.2f %.2f", temp.moveToX, temp.moveToY)+ "\n");
++					dataOutput.writeDouble(temp.moveToX);
++//					dataOutput.writeChars(Long.toBinaryString(Double.doubleToRawLongBits(temp.moveToX)));
++					dataOutput.writeDouble(temp.moveToY);
++//					dataOutput.writeChars(Long.toBinaryString(Double.doubleToRawLongBits(temp.moveToY)));
++//					System.out.println(temp.moveToX + " " + temp.moveToY);
++
+ 				} else if (event.type==Event.PAUSE) {
+ 					Pause temp = (Pause) event;
+-					
+-					writer.write("      <pause>\n");
+-					writer.write("        <time>" + String.format("%.2f", temp.time) + "</time>\n");
+-					writer.write("        <x>" + String.format("%.2f", temp.x) + "</x>\n");
+-					writer.write("        <y>" + String.format("%.2f", temp.y) + "</y>\n");
+-					writer.write("        <duration>" + String.format("%.2f", temp.duration)  + "</duration>\n");
+-					writer.write("      </pause>\n");	
+-					
+-					
++
++//					writer.write("      <pause>\n");
++//					writer.write("        <time>" + String.format("%.2f", temp.time) + "</time>\n");
++//					writer.write("        <x>" + String.format("%.2f", temp.x) + "</x>\n");
++//					writer.write("        <y>" + String.format("%.2f", temp.y) + "</y>\n");
++//					writer.write("        <duration>" + String.format("%.2f", temp.duration)  + "</duration>\n");
++//					writer.write("      </pause>\n");
++//					writer.write(String.format("%.2f %.2f", temp.x, temp.y)+ "\n");
++					dataOutput.writeDouble(temp.x);
++					dataOutput.writeDouble(temp.y);
++//					dataOutput.writeChars(Long.toBinaryString(Double.doubleToRawLongBits(temp.x)));
++//					dataOutput.writeChars(Long.toBinaryString(Double.doubleToRawLongBits(temp.y)));
++//					System.out.println(temp.x + " " + temp.y);
++
+ 				}  else if (event.type==Event.JOIN) {
+-					
+-					writer.write("      <join>\n");
+-					writer.write("        <time>" + String.format("%.2f", event.time) + "</time>\n");
+-					writer.write("        <x>" + String.format("%.2f", event.x) + "</x>\n");
+-					writer.write("        <y>" + String.format("%.2f", event.y) + "</y>\n");
+-					writer.write("      </join>\n");
+-	 				
+-					
++
++//					writer.write("      <join>\n");
++//					writer.write("        <time>" + String.format("%.2f", event.time) + "</time>\n");
++//					writer.write("        <x>" + String.format("%.2f", event.x) + "</x>\n");
++//					writer.write("        <y>" + String.format("%.2f", event.y) + "</y>\n");
++//					writer.write("      </join>\n");
++//					writer.write(String.format("%.2f %.2f JOIN %s", event.x, event.y, event.node.id)+ "\n");
++
+ 				}  else if (event.type==Event.LEAVE) {
+-					
+-					writer.write("      <leave>\n");
+-					writer.write("        <time>" + String.format("%.2f", event.time) + "</time>\n");
+-					writer.write("        <x>" + String.format("%.2f", event.x) + "</x>\n");
+-					writer.write("        <y>" + String.format("%.2f", event.y) + "</y>\n");
+-					writer.write("      </leave>\n");
+-	 				
++
++//					writer.write("      <leave>\n");
++//					writer.write("        <time>" + String.format("%.2f", event.time) + "</time>\n");
++//					writer.write("        <x>" + String.format("%.2f", event.x) + "</x>\n");
++//					writer.write("        <y>" + String.format("%.2f", event.y) + "</y>\n");
++//					writer.write("      </leave>\n");
++//					writer.write(String.format("%.2f %.2f", event.x, event.y, event.node.id)+ "\n");
+ 				}
+-				
+-			}
+-			
+-			if (lastNodeId!=-1) {
+-				writer.write("    </events>\n");
+-				writer.write("  </node>\n");
++
+ 			}
+-				
+-			writer.write("</traces>\n");
+-			writer.close();
+-			
++
++//			if (lastNodeId!=-1) {
++//				writer.write("    </events>\n");
++//				writer.write("  </node>\n");
++//			}
++//
++//			writer.write("</traces>\n");
++
++
++			//Dejun's method
++			dataOutput.close();
++			logger.info(String.format("dumped to %s", fileName));
++
+ 		} catch (Exception e) {
+ 			System.err.println(e.getMessage());
+ 		}
+-		
++
+ 	}
+-	
++
++	void dumpTo(String path) {
++//		ofstream wf (path, ios::out|ios::binary|ios::trunc);
++//		wf.write((char *)&config.num_objects, sizeof(config.num_objects));
++//		wf.write((char *)&config.duration, sizeof(config.duration));
++//		wf.write((char *)&mbr, sizeof(mbr));
++//		size_t num_points = config.duration*config.num_objects;
++//		wf.write((char *)trace, sizeof (Point) *num_points);
++//		wf.close();
++//		logger.info("dumped to {}", path);
++	}
++
++
+ }
+diff --git a/src/simulator/Simulator.java b/src/simulator/Simulator.java
+index 39a60d0..fa94d0b 100644
+--- a/src/simulator/Simulator.java
++++ b/src/simulator/Simulator.java
+@@ -34,6 +34,7 @@ package simulator;
+ 
+ 
+ import java.util.*;
++import java.util.concurrent.TimeUnit;
+ 
+ import event.Event;
+ import gui.GUI;
+@@ -109,8 +110,8 @@ public class Simulator {
+ 		System.out.println("*  Philipp Sommer, Computer Engineering and     *");
+ 		System.out.println("*  Networks Laboratory (TIK), ETH Zurich        *");
+ 		System.out.println("*************************************************");
+-		
+-		
++
++		long start = System.nanoTime();
+ 		// parse input parameters
+ 		if (args.length<1) {
+ 			System.err.println("No parameters specifed.");
+@@ -238,7 +239,7 @@ public class Simulator {
+ 		Iterator<Module> moduleIterator = modules.iterator();
+ 		while (moduleIterator.hasNext()){
+ 			Module module = moduleIterator.next();
+-			//System.out.println("Initializing module: " + module.name);
++//			System.out.println("Initializing module: " + module.name);
+ 			module.init();
+ 		}
+ 		
+@@ -268,6 +269,8 @@ public class Simulator {
+ 		
+ 		// simulation finished
+ 		mobilityModel.finish();
++
++		System.out.println("Everything's done!");
+ 		
+ 
+ 		// calculate average time node is in the simulation area
+@@ -282,7 +285,13 @@ public class Simulator {
+ 			//System.out.println("Finish module: " + module.name);
+ 			module.finish();
+ 		}
+-		
++
++		// some time passes
++		long end = System.nanoTime();
++
++		long elapsedTime = end - start;
++		long timeTaken = TimeUnit.SECONDS.convert(elapsedTime, TimeUnit.NANOSECONDS);
++		System.out.println("Time taken in seconds: " + timeTaken);
+ 	}
+ 
+ 	

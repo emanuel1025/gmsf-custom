@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="build" name="gmsf">
+
+
+    <path id="gmsf.classpath">
+        <pathelement location="bin"/>
+        <pathelement location="lib/itext-2.0.1.jar"/>
+    </path>
+    <path id="gmsf.classpath">
+        <pathelement location="bin"/>
+        <pathelement location="lib/guava-23.0.jar"/>
+    </path><path id="gmsf.classpath">
+    <pathelement location="bin"/>
+    <pathelement location="lib/itext-2.0.1.jar"/>
+</path>
+    <target name="init">
+        <mkdir dir="bin"/>
+        <copy includeemptydirs="false" todir="bin">
+            <fileset dir="src" excludes="**/*.launch, **/*.java"/>
+        </copy>
+    </target>
+    <target name="clean">
+        <delete dir="bin"/>
+    	<delete file="gmsf.jar" />
+    </target>
+    <target depends="clean" name="cleanall"/>
+    <target depends="init" name="build">
+
+        <javac debug="true" debuglevel="${debuglevel}" destdir="bin">
+            <src path="src"/>
+            <classpath refid="gmsf.classpath"/>
+        </javac>
+    	<jar destfile="gmsf.jar" basedir="bin">
+    		<manifest>
+    		    <attribute name="Main-Class" value="simulator.Simulator"/>
+    		</manifest>
+    	</jar>	
+    </target>
+    
+</project>
