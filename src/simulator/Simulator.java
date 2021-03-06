@@ -89,7 +89,7 @@ public class Simulator {
 	/** nodes participating in the simulation */
 	public static ArrayList<MobileNode> nodes = new ArrayList<MobileNode>();
 	/** node events */
-	public static LinkedList<Event> events = new LinkedList<Event>();
+	public static ArrayList<Event> events = new ArrayList<Event>();
 	/** graph representing the neighborhood relations between nodes */
 	public static Graph neighborhoodGraph = new Graph();
 	
@@ -121,7 +121,9 @@ public class Simulator {
 		String[] pairs = args[0].split(",");
 		for (int i=0; i<pairs.length;i++) {
 			String[] parts = pairs[i].split("=");
-			parameters.setProperty(parts[0], parts[1]);
+			System.out.println(Arrays.toString(parts));
+			if (parts.length > 1)
+				parameters.setProperty(parts[0], parts[1]);
 		}
 		
 		
@@ -229,55 +231,54 @@ public class Simulator {
 		
 		// simulation time settings
 		time = 0;
-		samples = (int)Math.floor((duration)/step)+1;
+		samples = (int)Math.floor((duration)/step);
 		
 				
 		// initialize simulation
 		mobilityModel.init();
-		
+
 		// initialize all modules
 		Iterator<Module> moduleIterator = modules.iterator();
 		while (moduleIterator.hasNext()){
 			Module module = moduleIterator.next();
-//			System.out.println("Initializing module: " + module.name);
 			module.init();
 		}
-		
-		
+
+
 		// perform simulation
 		for (int sample=0; sample<samples; sample++) {
 			System.out.println("Sample point: " + sample + "/" + samples + " time=" + time);
-			
+
 			// update node positions
 			mobilityModel.next();
-			
+
 			// modules
 			moduleIterator = modules.iterator();
 			while (moduleIterator.hasNext()){
 				Module module = moduleIterator.next();
 				module.next();
 			}
-					
+
 			// count average number of nodes
 			avgNodes += nodes.size();
 
 			// update simulation time
 			time+=step;
-			
+
 		}
-		
-		
+
+
 		// simulation finished
 		mobilityModel.finish();
 
 		System.out.println("Everything's done!");
-		
+
 
 		// calculate average time node is in the simulation area
 		avgNodeTime=1.00*avgNodeTime/nodeJoins;
 		avgNodes = 1.00*avgNodes/samples;
-		
-		
+
+
 		// finish all modules
 		moduleIterator = modules.iterator();
 		while (moduleIterator.hasNext()){
@@ -327,6 +328,6 @@ public class Simulator {
 	public static void addEvent(Event event) {
 		events.add(event);
 	}
-	
-	
+
+
 }

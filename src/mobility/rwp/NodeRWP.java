@@ -126,7 +126,7 @@ public class NodeRWP extends MobileNode {
 					double prevX = startX;
 					double prevY = startY;
 
-					while (curTime < Simulator.duration) {
+					while (curTime < Simulator.duration - 2) {
 						curX = startX + (endX - startX)*(curTime/Simulator.duration);
 						curY = startY + (endY - startY)*(curTime/Simulator.duration);
 						Move move = new Move(this, 0.0, prevX, prevY, curX, curY, initSpeed);
