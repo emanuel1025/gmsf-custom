@@ -59,6 +59,7 @@ public class GUI extends Module {
 	List<MobileNode> nodes = new LinkedList<MobileNode>();
 	/** local list of edges (connections) between nodes */
 	List<GraphEdge> edges = new LinkedList<GraphEdge>();
+	Simulator curSimulation;
 	
 	/** window size */
 	int windowSize = 500;
@@ -99,8 +100,8 @@ public class GUI extends Module {
 				while (it.hasNext()) {
 
 					MobileNode node = it.next();
-					int x = (int)Math.floor(node.x/Simulator.size*windowSize);
-					int y = (int)Math.floor(node.y/Simulator.size*windowSize);
+					int x = (int)Math.floor(node.x/curSimulation.size*windowSize);
+					int y = (int)Math.floor(node.y/curSimulation.size*windowSize);
 					
 					if (x>=0 && x<=windowSize && y>=0 && y<=windowSize) {
 						// draw node
@@ -117,7 +118,8 @@ public class GUI extends Module {
 	    }
 	}
 	
-	public GUI() {
+	public GUI(Simulator simulator) {
+		this.curSimulation = simulator;
 		name = "GUI";
 	}
 	
@@ -151,15 +153,15 @@ public class GUI extends Module {
         al = new ActionListener() {
             public void actionPerformed( ActionEvent e ) {
              // take snapshot
-             PDFOutput pdf = new PDFOutput(new File(Simulator.outputDirectory + "/snapshot.pdf"), Simulator.size);
+             PDFOutput pdf = new PDFOutput(new File(curSimulation.outputDirectory + "/snapshot.pdf"), curSimulation.size);
              Graph graph = new Graph();
              graph.setNodes(new LinkedList<GraphNode>(nodes));
              
              pdf.drawGraph(graph);
-             pdf.drawLine(new Line(0, 0, 0, Simulator.size), Color.black, 1);
-     		 pdf.drawLine(new Line(0, Simulator.size, Simulator.size, Simulator.size), Color.black, 1);
-     		 pdf.drawLine(new Line(Simulator.size, Simulator.size, Simulator.size, 0), Color.black, 1);
-     		 pdf.drawLine(new Line(Simulator.size, 0, 0, 0), Color.black, 1);
+             pdf.drawLine(new Line(0, 0, 0, curSimulation.size), Color.black, 1);
+     		 pdf.drawLine(new Line(0, curSimulation.size, curSimulation.size, curSimulation.size), Color.black, 1);
+     		 pdf.drawLine(new Line(curSimulation.size, curSimulation.size, curSimulation.size, 0), Color.black, 1);
+     		 pdf.drawLine(new Line(curSimulation.size, 0, 0, 0), Color.black, 1);
      		 pdf.close();
           };
         };
@@ -172,7 +174,7 @@ public class GUI extends Module {
         frame.setSize( windowSize + 3*windowOffset, windowSize + 6*windowOffset );
         
         // background image
-        background = Toolkit.getDefaultToolkit().getImage(Simulator.inputDirectory + "/map.png");
+        background = Toolkit.getDefaultToolkit().getImage(curSimulation.inputDirectory + "/map.png");
 		
         // start paused
         paused = true;
@@ -191,7 +193,7 @@ public class GUI extends Module {
 		
 		synchronized(monitor) {
 			edges.clear();
-			edges.addAll(Simulator.neighborhoodGraph.getEdges());
+			edges.addAll(curSimulation.neighborhoodGraph.getEdges());
 		}
 		// paint panel
 		panel.repaint();

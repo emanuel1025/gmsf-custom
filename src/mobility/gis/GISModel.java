@@ -34,9 +34,10 @@ package mobility.gis;
 
 import java.util.*;
 
-import simulator.*;
+//import simulator.*;
 import mobility.*;
 import model.RoadNode;
+import simulator.Simulator;
 
 
 /**
@@ -52,28 +53,33 @@ public class GISModel extends MobilityModel {
 	static LandscapeModel landscape = null;
 	static boolean enableTrafficLights = false;
 	static boolean enableCarFollowing = false;
+	Simulator curSimulation;
 
 	static boolean warmupPhase = true;
-	
+
+	public GISModel(Simulator simulator) {
+		curSimulation = simulator;
+	}
+
 	public void init() {
 		
 		
 		landscape = new LandscapeModel();
-		LandscapeModelFactory.addRoads(Simulator.inputDirectory + "/roads.dat", landscape);
+		LandscapeModelFactory.addRoads(curSimulation.inputDirectory + "/roads.dat", landscape);
 		//LandscapeModelFactory.addPointOfInterests(Simulator.inputDirectory + "/points.dat", landscape);
 		LandscapeModelFactory.addPointOfInterests(landscape);
 		
-		if (Simulator.parameters.containsKey("CAR_FOLLOWING")) {
+		if (curSimulation.parameters.containsKey("CAR_FOLLOWING")) {
 			try {
-				 enableCarFollowing = (1==Integer.valueOf(Simulator.parameters.getProperty("CAR_FOLLOWING")));
+				 enableCarFollowing = (1==Integer.valueOf(curSimulation.parameters.getProperty("CAR_FOLLOWING")));
 			} catch (Exception e) {
 				System.err.println("Error parsing parameter CAR_FOLLOWING: " + e.getMessage());
 			}
 		}
 		
-		if (Simulator.parameters.containsKey("TRAFFIC_LIGHTS")) {
+		if (curSimulation.parameters.containsKey("TRAFFIC_LIGHTS")) {
 			try {
-				 enableTrafficLights = (1==Integer.valueOf(Simulator.parameters.getProperty("TRAFFIC_LIGHTS")));
+				 enableTrafficLights = (1==Integer.valueOf(curSimulation.parameters.getProperty("TRAFFIC_LIGHTS")));
 			} catch (Exception e) {
 				System.err.println("Error parsing parameter TRAFFIC_LIGHTS: " + e.getMessage());
 			}
@@ -91,10 +97,10 @@ public class GISModel extends MobilityModel {
 		
 		
 		
-		if (Simulator.parameters.containsKey("NODES")) {
+		if (curSimulation.parameters.containsKey("NODES")) {
 			int nodesNumber = 0;
 			try {
-				nodesNumber = Integer.valueOf(Simulator.parameters.getProperty("NODES"));
+				nodesNumber = Integer.valueOf(curSimulation.parameters.getProperty("NODES"));
 			} catch (Exception e) {
 				System.err.println("Error parsing parameter NODES: " + e.getMessage());
 			}
@@ -102,10 +108,10 @@ public class GISModel extends MobilityModel {
 			// intialize nodes
 			System.out.println("Initialization of GIS model");
 			for (int i=1; i<=nodesNumber; i++) {
-				NodeGIS node = new NodeGIS(i);
+				NodeGIS node = new NodeGIS(i, curSimulation);
 				nodes.add(node);
 				node.warmup();
-				Simulator.uniqueNodes++;
+				curSimulation.uniqueNodes++;
 			}
 			System.out.println("GIS model initialized");
 		} else {

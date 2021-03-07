@@ -47,18 +47,22 @@ import model.*;
  */
 public class PDFFormatter extends TraceFormatter {
 
-	
+	Simulator curSimulation;
+	public PDFFormatter(Simulator simulator) {
+		this.curSimulation = simulator;
+	}
+
 	public void finish() {
 		
 		
 		// create a PDFOutput instance
-		PDFOutput pdf = new PDFOutput(new File(Simulator.outputDirectory + "/trace.pdf"), Simulator.size);
+		PDFOutput pdf = new PDFOutput(new File(curSimulation.outputDirectory + "/trace.pdf"), curSimulation.size);
 		
 		// sort all events by node identifier and event start time
-		Collections.sort(Simulator.events, new EventComparatorByNodeIdByStartTime());
+		Collections.sort(curSimulation.events, new EventComparatorByNodeIdByStartTime());
 		
 		// draw paths of all nodes
-		Iterator<Event> it = Simulator.events.iterator();
+		Iterator<Event> it = curSimulation.events.iterator();
 		// identifier of the previous node
 		int previousNodeId = -1;
 		
@@ -70,7 +74,7 @@ public class PDFFormatter extends TraceFormatter {
 				// next node
 				if (previousNodeId!=-1) pdf.newPage();
 				pdf.drawBorder(2, 2);
-				pdf.drawText(0, Simulator.size + 20, "Node: " + event.node.id, Color.BLACK, 12f);
+				pdf.drawText(0, curSimulation.size + 20, "Node: " + event.node.id, Color.BLACK, 12f);
 				previousNodeId = event.node.id;
 			}
 			

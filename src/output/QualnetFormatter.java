@@ -51,6 +51,11 @@ import model.Position;
  */
 public class QualnetFormatter extends TraceFormatter {
 
+	Simulator curSimulator;
+	public QualnetFormatter(Simulator simulator) {
+		this.curSimulator = simulator;
+	}
+
 	/**
 	 * Waypoint describes the position of a mobile node at a certain time during the Simulator.
 	 * @author psommer
@@ -118,7 +123,7 @@ public class QualnetFormatter extends TraceFormatter {
 		int uniqueNodes = 0;
 		
 		try {
-			File dir = new File(Simulator.outputDirectory);
+			File dir = new File(curSimulator.outputDirectory);
 			dir.mkdirs();
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
@@ -126,7 +131,7 @@ public class QualnetFormatter extends TraceFormatter {
 		
 		// output node positions
 		try {
-			traceWriter = new BufferedWriter(new FileWriter(new File(Simulator.outputDirectory + "/trace.mobility")));
+			traceWriter = new BufferedWriter(new FileWriter(new File(curSimulator.outputDirectory + "/trace.mobility")));
 	    } catch (Exception e) {
 	    	System.err.println(e.getLocalizedMessage());
 	    }
@@ -134,19 +139,19 @@ public class QualnetFormatter extends TraceFormatter {
 	    
 	    // output network interface failures
 		try {
-			failureWriter = new BufferedWriter(new FileWriter(new File(Simulator.outputDirectory + "/interface.fault")));
+			failureWriter = new BufferedWriter(new FileWriter(new File(curSimulator.outputDirectory + "/interface.fault")));
 	    } catch (Exception e) {
 	    	System.err.println(e.getLocalizedMessage());
 	    }
 	    
 	    
 	    // sort events by node id and time
-	    Collections.sort(Simulator.events, new EventComparatorByStartTime());
+	    Collections.sort(curSimulator.events, new EventComparatorByStartTime());
 	    
 	    int nodeIdTemp = 0;
 	    
 	    // iteration over all events
-	    Iterator<Event> it = Simulator.events.iterator();
+	    Iterator<Event> it = curSimulator.events.iterator();
 	    while (it.hasNext()) {
 	    	
 	    	Event event = it.next();
@@ -217,9 +222,9 @@ public class QualnetFormatter extends TraceFormatter {
 	    	
 	    	Waypoint exitPoint = itWay.next();
 	    	
-	    	if (exitPoint.time<Simulator.duration) {
+	    	if (exitPoint.time<curSimulator.duration) {
 				try {
-					failureWriter.write("INTERFACE-FAULT " + getIPAddress(exitPoint.id) + " " + String.format("%.2f", exitPoint.time) + "S " + String.format("%.2f", Simulator.duration) + "S\n");
+					failureWriter.write("INTERFACE-FAULT " + getIPAddress(exitPoint.id) + " " + String.format("%.2f", exitPoint.time) + "S " + String.format("%.2f", curSimulator.duration) + "S\n");
 				} catch (Exception e) {
 					System.err.println(e.getMessage());
 				}

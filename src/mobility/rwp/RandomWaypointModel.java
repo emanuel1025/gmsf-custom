@@ -55,8 +55,14 @@ public final class RandomWaypointModel extends MobilityModel {
 	static double probabilityPause = 0;
 	/** maximum (normalized) distance between two nodes in the simulation */
 	static double maxDistanceNormalized = Math.sqrt(2);
-	
-	
+	Simulator curSimulation;
+
+	public RandomWaypointModel(Simulator simulator) {
+		super();
+		this.curSimulation = simulator;
+	}
+
+
 	/**
 	 * Initializes the random waypoint mobility model with the parameters defined by the simulation.
 	 */
@@ -66,40 +72,40 @@ public final class RandomWaypointModel extends MobilityModel {
 		double speedMin = 0, speedMax = 0, pauseMin = 0, pauseMax = 0;
 		
 		
-		if (Simulator.parameters.containsKey("SPEED_MIN")) {
+		if (curSimulation.parameters.containsKey("SPEED_MIN")) {
 			try {
-				 speedMin = Double.valueOf(Simulator.parameters.getProperty("SPEED_MIN"));
+				 speedMin = Double.valueOf(curSimulation.parameters.getProperty("SPEED_MIN"));
 			} catch (Exception e) {
 				System.err.println("Error parsing parameter SPEED_MIN: " + e.getMessage());
 			}
 		}
 		
-		if (Simulator.parameters.containsKey("SPEED_MAX")) {
+		if (curSimulation.parameters.containsKey("SPEED_MAX")) {
 			try {
-				 speedMax = Double.valueOf(Simulator.parameters.getProperty("SPEED_MAX"));
+				 speedMax = Double.valueOf(curSimulation.parameters.getProperty("SPEED_MAX"));
 			} catch (Exception e) {
 				System.err.println("Error parsing parameter SPEED_MAX: " + e.getMessage());
 			}
 		}
 		
-		if (Simulator.parameters.containsKey("PAUSE_MIN")) {
+		if (curSimulation.parameters.containsKey("PAUSE_MIN")) {
 			try {
-				 pauseMin = Double.valueOf(Simulator.parameters.getProperty("PAUSE_MIN"));
+				 pauseMin = Double.valueOf(curSimulation.parameters.getProperty("PAUSE_MIN"));
 			} catch (Exception e) {
 				System.err.println("Error parsing parameter PAUSE_MIN: " + e.getMessage());
 			}
 		}
 		
-		if (Simulator.parameters.containsKey("PAUSE_MAX")) {
+		if (curSimulation.parameters.containsKey("PAUSE_MAX")) {
 			try {
-				 pauseMax = Double.valueOf(Simulator.parameters.getProperty("PAUSE_MAX"));
+				 pauseMax = Double.valueOf(curSimulation.parameters.getProperty("PAUSE_MAX"));
 			} catch (Exception e) {
 				System.err.println("Error parsing parameter PAUSE_MAX: " + e.getMessage());
 			}
 		}
 			
-		velocityDistribution = new UniformDistribution(speedMin, speedMax, Simulator.seed);
-		waitTimeDistribution = new UniformDistribution(pauseMin, pauseMax, Simulator.seed);
+		velocityDistribution = new UniformDistribution(speedMin, speedMax, curSimulation.seed);
+		waitTimeDistribution = new UniformDistribution(pauseMin, pauseMax, curSimulation.seed);
 		
 		
 		// steady-state distribution initialization
@@ -117,27 +123,27 @@ public final class RandomWaypointModel extends MobilityModel {
 		//System.out.println("PDF(mean(v)): " + model.velocityDistribution.getPDF(model.velocityDistribution.getMean()));
 		//System.out.println("Mean of 1/v: " + meanInverseVelocity);
 		
-		probabilityPause = waitTimeDistribution.getMean()/(waitTimeDistribution.getMean() + 0.521405*Simulator.size*meanInverseVelocity);
+		probabilityPause = waitTimeDistribution.getMean()/(waitTimeDistribution.getMean() + 0.521405*curSimulation.size*meanInverseVelocity);
 		
 		//System.out.println("Probability of node being paused: " + probabilityPause);
 		
 		
-		if (Simulator.parameters.containsKey("NODES")) {
+		if (curSimulation.parameters.containsKey("NODES")) {
 			int nodesNumber = 0;
 			try {
-				nodesNumber = Integer.valueOf(Simulator.parameters.getProperty("NODES"));
+				nodesNumber = Integer.valueOf(curSimulation.parameters.getProperty("NODES"));
 			} catch (Exception e) {
 				System.err.println("Error parsing parameter NODES: " + e.getMessage());
 			}
 			
 			// intialize nodes
 			System.out.println("Initialization of Random Waypoint model");
-			Simulator.uniqueNodes = 0;
+			curSimulation.uniqueNodes = 0;
 			for (int i=1; i<=nodesNumber; i++) {
-				NodeRWP node = new NodeRWP(i);
+				NodeRWP node = new NodeRWP(i, curSimulation);
 				node.init();
 				nodes.add(node);
-				Simulator.uniqueNodes++;
+				curSimulation.uniqueNodes++;
 			}
 			
 			

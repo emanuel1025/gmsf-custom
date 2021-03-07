@@ -65,7 +65,13 @@ public class ManhattanModel extends MobilityModel {
 	static double speedMin = 10;
 	/** maximum speed */
 	static double speedMax = 14;
-	
+	Simulator curSimulation;
+
+	public ManhattanModel(Simulator simulator) {
+		super();
+		this.curSimulation = simulator;
+	}
+
 
 	/**
 	 * Initializes the mobility model with the parameters defined by the Simulator.
@@ -78,10 +84,10 @@ public class ManhattanModel extends MobilityModel {
 		// calculate the block length
 		int blockLength = 0;
 		
-		if (Simulator.parameters.containsKey("BLOCKS")) {
+		if (curSimulation.parameters.containsKey("BLOCKS")) {
 			try {
-				int blocks = Integer.valueOf(Simulator.parameters.getProperty("BLOCKS"));
-				blockLength = (int)Math.floor(Simulator.size/blocks);
+				int blocks = Integer.valueOf(curSimulation.parameters.getProperty("BLOCKS"));
+				blockLength = (int)Math.floor(curSimulation.size/blocks);
 				
 			} catch (Exception e) {
 				System.err.println("Error parsing parameter BLOCKS: " + e.getMessage());
@@ -134,10 +140,10 @@ public class ManhattanModel extends MobilityModel {
 		System.out.println("Nodes: " + graphNodes.size() + ", Edges: " + graphEdges.size());
 		
 		
-		if (Simulator.parameters.containsKey("NODES")) {
+		if (curSimulation.parameters.containsKey("NODES")) {
 			int nodesNumber = 0;
 			try {
-				nodesNumber = Integer.valueOf(Simulator.parameters.getProperty("NODES"));
+				nodesNumber = Integer.valueOf(curSimulation.parameters.getProperty("NODES"));
 			} catch (Exception e) {
 				System.err.println("Error parsing parameter NODES: " + e.getMessage());
 			}
@@ -145,10 +151,10 @@ public class ManhattanModel extends MobilityModel {
 			// intialize nodes
 			System.out.println("Initialization of Manhattan model");
 			for (int i=1; i<=nodesNumber; i++) {
-				NodeManhattan node = new NodeManhattan(i);
+				NodeManhattan node = new NodeManhattan(i, curSimulation);
 				nodes.add(node);
 				node.warmup();
-				Simulator.uniqueNodes++;
+				curSimulation.uniqueNodes++;
 			}
 			
 		} else {
@@ -156,17 +162,17 @@ public class ManhattanModel extends MobilityModel {
 			return;
 		}
 
-		if (Simulator.parameters.containsKey("SPEED_MIN")) {
+		if (curSimulation.parameters.containsKey("SPEED_MIN")) {
 			try {
-				 speedMin = Double.valueOf(Simulator.parameters.getProperty("SPEED_MIN"));
+				 speedMin = Double.valueOf(curSimulation.parameters.getProperty("SPEED_MIN"));
 			} catch (Exception e) {
 				System.err.println("Error parsing parameter SPEED_MIN: " + e.getMessage());
 			}
 		}
 		
-		if (Simulator.parameters.containsKey("SPEED_MAX")) {
+		if (curSimulation.parameters.containsKey("SPEED_MAX")) {
 			try {
-				 speedMax = Double.valueOf(Simulator.parameters.getProperty("SPEED_MAX"));
+				 speedMax = Double.valueOf(curSimulation.parameters.getProperty("SPEED_MAX"));
 			} catch (Exception e) {
 				System.err.println("Error parsing parameter SPEED_MAX: " + e.getMessage());
 			}

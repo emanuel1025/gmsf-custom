@@ -45,6 +45,11 @@ import event.*;
  */
 public final class NAMFormatter extends TraceFormatter {
 
+	Simulator curSimulation;
+	public NAMFormatter(Simulator simulator) {
+		this.curSimulation = simulator;
+	}
+
 	/**
 	 * NodeIdComparator is used to compare nodes based on the node id.
 	 * @author psommer
@@ -73,7 +78,7 @@ public final class NAMFormatter extends TraceFormatter {
 		
 		try {
 			// initialize output writer
-			writer = new BufferedWriter(new FileWriter(new File(Simulator.outputDirectory + "/trace.nam")));
+			writer = new BufferedWriter(new FileWriter(new File(curSimulation.outputDirectory + "/trace.nam")));
 	    } catch (Exception e) {
 	    	System.err.println(e.getLocalizedMessage());
 	    }
@@ -82,10 +87,10 @@ public final class NAMFormatter extends TraceFormatter {
 	    HashSet<Integer> nodes = new HashSet<Integer>();
 		
 	    // sort events by start time
-	    Collections.sort(Simulator.events, new EventComparatorByStartTime());
+	    Collections.sort(curSimulation.events, new EventComparatorByStartTime());
 	    
 	    // iteration over all events
-	    Iterator<Event> it = Simulator.events.iterator();
+	    Iterator<Event> it = curSimulation.events.iterator();
 	    while (it.hasNext()) {
 	    	Event event = it.next();
 	    	// add new node id to the set
@@ -110,14 +115,14 @@ public final class NAMFormatter extends TraceFormatter {
 
 	    // output network settings
 	    try {
-			writer.write("V -t * -v 1.0a5 -a 0\nW -t * -x " + Simulator.size + " -y " + Simulator.size +"\nA -t * -n 1 -p 0 -o 0xffffffff -c 31 -a 1\nA -t * -h 1 -m 2147483647 -s 0\n");
+			writer.write("V -t * -v 1.0a5 -a 0\nW -t * -x " + curSimulation.size + " -y " + curSimulation.size +"\nA -t * -n 1 -p 0 -o 0xffffffff -c 31 -a 1\nA -t * -h 1 -m 2147483647 -s 0\n");
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
 		}
 		
 		// output node mobility traces
 		
-		it = Simulator.events.iterator();
+		it = curSimulation.events.iterator();
 		while (it.hasNext()) {
 			
 			Event temp = it.next();

@@ -33,6 +33,10 @@ package test;
 
 import simulator.Simulator;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
 public class SimulatorTest {
 
 	/**
@@ -40,17 +44,26 @@ public class SimulatorTest {
 	 * using the Random Waypoint (RWP) mobility model. 
 	 * @param args
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws InterruptedException {
 		
 		String[] parameter = new String[1];
 		
-		parameter[0]  = "NODES=100,SIMULATION_SIZE=1000,TIME=2000,MODEL=RWP,OUTPUT=NAM";
+		parameter[0]  = "NODES=100,SIMULATION_SIZE=1000,TIME=2000,MODEL=RWP,FORMAT=XML";
 		parameter[0] += ",SEED=0,KEY=TEST";
 		parameter[0] += ",SPEED_MIN=12,SPEED_MAX=14,PAUSE_MIN=0,PAUSE_MAX=5";
-		parameter[0] += ",GUI=1";
-		
-		Simulator.main(parameter);
-		
+		parameter[0] += ",GUI=0";
+
+		int numRuns = 10;
+
+		ExecutorService es = Executors.newCachedThreadPool();
+		for(int i = 0;i < numRuns; i++)
+			es.execute(new Simulator("Thread-" + i,  parameter));
+		es.shutdown();
+		boolean finished = es.awaitTermination(1, TimeUnit.DAYS);
+		if (finished)
+			System.out.println("Everything has completed!");
+		else
+			System.out.println("An error has occurred during thread execution");
 	}
 
 }

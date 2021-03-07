@@ -37,9 +37,11 @@ import event.*;
 
 
 public class NodeMMTS extends MobileNode {
-	
-	public NodeMMTS(int id) {
-		super(id);
+
+	Simulator curSimulation;
+	public NodeMMTS(int id, Simulator curSimulation) {
+		super(id, curSimulation);
+		this.curSimulation = curSimulation;
 	}
 	
 	@Override
@@ -52,7 +54,7 @@ public class NodeMMTS extends MobileNode {
 		
 		// node leaves the simulation if it is more than 2 seconds paused
 		
-		if (currentEvent!=null && lastEvent.type!=Event.LEAVE && lastEventEndTime<(Simulator.time + 5)) {
+		if (currentEvent!=null && lastEvent.type!=Event.LEAVE && lastEventEndTime<(curSimulation.time + 5)) {
 			Move lastMoveEvent = (Move) lastEvent;
 			addEvent(new Leave(this, lastEventEndTime, lastMoveEvent.moveToX, lastMoveEvent.moveToY));
 			MMTSModel.poiSet.add(String.format("%.0f %.0f %d", lastMoveEvent.moveToX, lastMoveEvent.moveToY, 1));

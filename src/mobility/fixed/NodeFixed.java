@@ -42,15 +42,18 @@ import event.*;
  *
  */
 public class NodeFixed extends MobileNode {
-	
+
+	Simulator curSimulator;
 	/**
 	 * Creates a new fixed node without any mobility
 	 * @param id unique node identifier
+	 * @param curSimulator
 	 */
-	public NodeFixed(int id) {
-		super(id);
+	public NodeFixed(int id, Simulator curSimulator) {
+		super(id, curSimulator);
+		this.curSimulator = curSimulator;
 	}
-	
+
 	public void init() {
 		
 		// node starts moving
@@ -61,34 +64,34 @@ public class NodeFixed extends MobileNode {
 		
 		while (reject) {
 			
-			double x1 = Simulator.rng.nextDouble();
-			double x2 = Simulator.rng.nextDouble();
-			double y1 = Simulator.rng.nextDouble();
-			double y2 = Simulator.rng.nextDouble();
+			double x1 = curSimulator.rng.nextDouble();
+			double x2 = curSimulator.rng.nextDouble();
+			double y1 = curSimulator.rng.nextDouble();
+			double y2 = curSimulator.rng.nextDouble();
 			
 			
 			double r = Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))/Math.sqrt(2); 
-			double u = Simulator.rng.nextDouble();
+			double u = curSimulator.rng.nextDouble();
 			
 			
 			if (u<r) {
 				// accept initial positions
 				reject = false;
 				
-				u = Simulator.rng.nextDouble();
+				u = curSimulator.rng.nextDouble();
 				// select a random position on the line between (x1,y1) and (x2,y2)
 				double initX = u*x1 + (1-u)*x2;
 				double initY = u*y1 + (1-u)*y2;
 				
 				// initial speed
-				u = Simulator.rng.nextDouble();
+				u = curSimulator.rng.nextDouble();
 				
 				// node joins the simulation
-				Join join = new Join(this, 0.0, Simulator.size*initX, Simulator.size*initY);
+				Join join = new Join(this, 0.0, curSimulator.size*initX, curSimulator.size*initY);
 				addEvent(join);
 				
 				// pause node during the whole simulation period
-				addEvent(new Pause(this, 0.0, Simulator.duration,  join.x, join.y));
+				addEvent(new Pause(this, 0.0, curSimulator.duration,  join.x, join.y));
 				
 			}
 								
@@ -109,8 +112,8 @@ public class NodeFixed extends MobileNode {
 	}
 	
 	public void finish() {
-		addEvent(new Leave(this, Simulator.duration, x, y));
-		Simulator.removeNode(Simulator.duration, this);
+		addEvent(new Leave(this, curSimulator.duration, x, y));
+		curSimulator.removeNode(curSimulator.duration, this);
 		super.finish();
 	}
 	

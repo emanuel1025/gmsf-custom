@@ -64,16 +64,20 @@ public class MMTSModel extends MobilityModel {
 	int id = 0;
 	
 	public static HashSet<String> poiSet = new HashSet<String>();
-	
-	
-	
-	
+	Simulator curSimulation;
+
+	public MMTSModel(Simulator simulator) {
+		super();
+		this.curSimulation = simulator;
+	}
+
+
 	public void init() {
 
 		
 		// open input reader for the traces file
 		try {
-	        input = new BufferedReader(new FileReader(Simulator.inputDirectory + "/mmts.dat"));
+	        input = new BufferedReader(new FileReader(curSimulation.inputDirectory + "/mmts.dat"));
 	        // read the first line in the file
 	    } catch (Exception e) {
 			System.err.println("MMTS trace file not found: " + e.getMessage());
@@ -129,17 +133,17 @@ public class MMTSModel extends MobilityModel {
 		
 		while (line!=null) {
 			
-			if (t1<=(Simulator.time + readahead)) {
+			if (t1<=(curSimulation.time + readahead)) {
 				
 				// process event
 				
 				if (id>nodeUniqueId) {
 					// create a new node
-					currentNode = new NodeMMTS(id);
+					currentNode = new NodeMMTS(id, curSimulation);
 						
 					nodes.add(currentNode);
 					currentNode.init();
-					Simulator.uniqueNodes++;
+					curSimulation.uniqueNodes++;
 					nodeUniqueId++;
 					
 					// generate simulation join event
@@ -150,7 +154,7 @@ public class MMTSModel extends MobilityModel {
 					currentNode = nodes.get(id-1);
 					
 					// check if node enters the simulation area (again)
-					if(x1==0.0 || x1==Simulator.size || y1==0.0 || y1==Simulator.size) {
+					if(x1==0.0 || x1==curSimulation.size || y1==0.0 || y1==curSimulation.size) {
 						currentNode.addEvent(new Join(currentNode, t1, x1, y1));
 						//System.out.println("Node enters simulation area again!");
 					}

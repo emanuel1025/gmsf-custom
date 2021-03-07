@@ -35,9 +35,9 @@ package mobility;
 import java.util.*;
 
 
-import simulator.*;
 import event.*;
 import model.*;
+import simulator.Simulator;
 
 
 /**
@@ -48,6 +48,7 @@ import model.*;
  */
 public abstract class MobileNode extends GraphNode{
 
+	private Simulator simulator;
 	/** unique id for this node */
 	public int id = 0;
 	/** indicates if the node is currently participating in the simulation */
@@ -91,12 +92,16 @@ public abstract class MobileNode extends GraphNode{
 	 * Constructs a new Node
 	 * @param id unique identifier for this node. This identifier has to be unique in the simulation.
 	 */
-	public MobileNode(int id) {
+	public MobileNode(int id, Simulator simulator) {
+		this.simulator = simulator;
 		this.id = id;
-		leaveTime = Simulator.duration;
+		leaveTime = simulator.duration;
 		lastEventEndTime = 0;
 	}
-	
+
+	protected MobileNode() {
+	}
+
 	/**
 	 * Returns the unique identifier for this node.
 	 * @return Unique node identifier
@@ -131,7 +136,7 @@ public abstract class MobileNode extends GraphNode{
 		// update the end time of the current event
 		lastEventEndTime = event.time + event.duration;
 		// inform the simulation about this event
-		Simulator.addEvent(event);
+		simulator.addEvent(event);
 		
 	}
 	
@@ -152,20 +157,20 @@ public abstract class MobileNode extends GraphNode{
 		// get the first event in the list
 		Event firstEvent = events.peek();
 		
-		while (firstEvent!=null && firstEvent.time<=Simulator.time) {
+		while (firstEvent!=null && firstEvent.time<=simulator.time) {
 		
 			// proceed with the next event 
 			currentEvent = events.poll();
 			
 			if (currentEvent.type==Event.JOIN) {
 				// add node to the simulation
-				Simulator.addNode(currentEvent.time, this);
+				simulator.addNode(currentEvent.time, this);
 				participating = true;
 				joinTime = currentEvent.time;
 			} else if (currentEvent.type==Event.LEAVE) {
 				// remove node from the simulation
 				leaveTime = currentEvent.time;
-				Simulator.removeNode(currentEvent.time, this);
+				simulator.removeNode(currentEvent.time, this);
 				participating = false;
 				currentEvent = null;
 				
@@ -187,9 +192,9 @@ public abstract class MobileNode extends GraphNode{
 			
 			Move movement = (Move) currentEvent;
 				
-			if (Simulator.time<currentEvent.time + movement.duration) {
+			if (simulator.time<currentEvent.time + movement.duration) {
 				// node is moving
-				double fraction = (Simulator.time - movement.time)/movement.duration;
+				double fraction = (simulator.time - movement.time)/movement.duration;
 					
 				// update the current node position, velocity and direction
 				x = fraction*(movement.moveToX-movement.x) + movement.x;
@@ -214,7 +219,7 @@ public abstract class MobileNode extends GraphNode{
 		}
 		
 		
-		if ((currentEvent.time + currentEvent.duration)<Simulator.time) currentEvent = null;
+		if ((currentEvent.time + currentEvent.duration)<simulator.time) currentEvent = null;
 		
 		return true;
 	};
@@ -226,7 +231,7 @@ public abstract class MobileNode extends GraphNode{
 	public void finish() {
 		// clear all events
 		events.clear();
-		if (leaveTime>Simulator.duration) leaveTime = Simulator.duration;
+		if (leaveTime>simulator.duration) leaveTime = simulator.duration;
 	}
 	
 	/**

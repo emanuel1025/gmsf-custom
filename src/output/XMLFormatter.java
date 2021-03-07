@@ -48,33 +48,40 @@ import simulator.*;
  */
 public class XMLFormatter extends TraceFormatter {
 
-    private final String fileName = "/trace-" + System.currentTimeMillis() + ".xml";
+    private final String fileName = "/trace-" + Thread.currentThread().getName() + ".xml";
+
     private final Logger logger =
             Logger.getLogger(this.getClass().getSimpleName());
+    Simulator curSimulation;
+
+    public XMLFormatter(Simulator simulator) {
+        System.out.println("Init XMLFORMATTER");
+        this.curSimulation = simulator;
+    }
 
     public void finish() {
 
         // sort all events by node identifier and start time
-        Collections.sort(Simulator.events, new EventComparatorByNodeIdByStartTime());
+        Collections.sort(curSimulation.events, new EventComparatorByNodeIdByStartTime());
 
         try {
-            LittleEndianDataOutputStream dataOutput = new LittleEndianDataOutputStream(new FileOutputStream(Simulator.outputDirectory + fileName));
+            LittleEndianDataOutputStream dataOutput = new LittleEndianDataOutputStream(new FileOutputStream(curSimulation.outputDirectory + fileName));
 
             //writing hyperparameters
-            int nodes = Simulator.uniqueNodes;
-            int duration = (int) Simulator.duration;
+            int nodes = curSimulation.uniqueNodes;
+            int duration = (int) curSimulation.duration;
             dataOutput.writeInt(nodes);
             dataOutput.writeInt(duration);
 
             //writing mbr
             dataOutput.writeDouble(0.0);
             dataOutput.writeDouble(0.0);
-            dataOutput.writeDouble(Simulator.size);
-            dataOutput.writeDouble(Simulator.size);
+            dataOutput.writeDouble(curSimulation.size);
+            dataOutput.writeDouble(curSimulation.size);
 
             // output paths of all nodes
             ArrayList<Double> paths = new ArrayList<>();
-            System.out.println("Event Size " + Simulator.events.size());
+            System.out.println("Event Size " + curSimulation.events.size());
             int numFound = 0;
             for (int i = 0; i < duration; i++) {
 //                System.out.println("Current Iteration " + i);
@@ -82,7 +89,7 @@ public class XMLFormatter extends TraceFormatter {
                 int j = 0;
                 int lookfor = i;
                 //passing through all events
-                for (Event event : Simulator.events) {
+                for (Event event : curSimulation.events) {
                     if (j == lookfor) {
                         numFound += 1;
                         if (event.type == Event.MOVE) {
@@ -106,8 +113,8 @@ public class XMLFormatter extends TraceFormatter {
                 //manual job run and combine all the files later
             }
 
-            logger.info(String.format("Number of nodes: %d", Simulator.uniqueNodes));
-            logger.info(String.format("Duration of simulation: %d", (int) Simulator.duration));
+            logger.info(String.format("Number of nodes: %d", curSimulation.uniqueNodes));
+            logger.info(String.format("Duration of simulation: %d", (int) curSimulation.duration));
             logger.info(String.format("NumFound: %d", numFound));
 //            for (int i = 0; i < duration; i++) {
 //                for (int j = 0; j < nodes; j++) {
@@ -125,7 +132,7 @@ public class XMLFormatter extends TraceFormatter {
         }
 
         try {
-            LittleEndianDataInputStream dataInput = new LittleEndianDataInputStream(new FileInputStream(Simulator.outputDirectory + fileName));
+            LittleEndianDataInputStream dataInput = new LittleEndianDataInputStream(new FileInputStream(curSimulation.outputDirectory + fileName));
             // Count the total byte form the input stream
             int count = dataInput.available();
             System.out.println(count);

@@ -50,31 +50,37 @@ public class FixedModel extends MobilityModel {
 	public static double speedMin = 0;
 	/** maximum speed parameter (used for steady-state initialization) */
 	public static double speedMax = 0;
-	
+	Simulator curSimulator;
+
+	public FixedModel(Simulator simulator) {
+		super();
+		this.curSimulator = simulator;
+	}
+
 	public void init() {
 		
 		
-		if (Simulator.parameters.containsKey("NODES")) {
+		if (curSimulator.parameters.containsKey("NODES")) {
 			int nodesNumber = 0;
 			try {
-				nodesNumber = Integer.valueOf(Simulator.parameters.getProperty("NODES"));
+				nodesNumber = Integer.valueOf(curSimulator.parameters.getProperty("NODES"));
 			} catch (Exception e) {
 				System.err.println("Error parsing parameter NODES: " + e.getMessage());
 			}
 			
 			
 			
-			if (Simulator.parameters.containsKey("SPEED_MIN")) {
+			if (curSimulator.parameters.containsKey("SPEED_MIN")) {
 				try {
-					 speedMin = Double.valueOf(Simulator.parameters.getProperty("SPEED_MIN"));
+					 speedMin = Double.valueOf(curSimulator.parameters.getProperty("SPEED_MIN"));
 				} catch (Exception e) {
 					System.err.println("Error parsing parameter SPEED_MIN: " + e.getMessage());
 				}
 			}
 			
-			if (Simulator.parameters.containsKey("SPEED_MAX")) {
+			if (curSimulator.parameters.containsKey("SPEED_MAX")) {
 				try {
-					 speedMax = Double.valueOf(Simulator.parameters.getProperty("SPEED_MAX"));
+					 speedMax = Double.valueOf(curSimulator.parameters.getProperty("SPEED_MAX"));
 				} catch (Exception e) {
 					System.err.println("Error parsing parameter SPEED_MAX: " + e.getMessage());
 				}
@@ -83,10 +89,10 @@ public class FixedModel extends MobilityModel {
 			// intialize nodes
 			System.out.println("Initialization of dummy model (no mobility)");
 			for (int i=1; i<=nodesNumber; i++) {
-				MobileNode node = new NodeFixed(i);
+				MobileNode node = new NodeFixed(i, curSimulator);
 				nodes.add(node);
 				node.init();
-				Simulator.uniqueNodes++;
+				curSimulator.uniqueNodes++;
 			}
 			
 		} else {

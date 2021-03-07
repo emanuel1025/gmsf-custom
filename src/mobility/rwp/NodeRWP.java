@@ -42,32 +42,35 @@ import event.*;
  *
  */
 public class NodeRWP extends MobileNode {
-	
+
+	Simulator curSimulation;
 	/**
 	 * Creates a new node implementing the random waypoint mobility model
 	 * @param id unique node identifier
+	 * @param curSimulation
 	 */
-	public NodeRWP(int id) {
-		super(id);
+	public NodeRWP(int id, Simulator curSimulation) {
+		super(id, curSimulation);
+		this.curSimulation = curSimulation;
 	}
 	
 	public void init() {
 		
-		if (Simulator.rng.nextDouble()<RandomWaypointModel.probabilityPause) {
+		if (curSimulation.rng.nextDouble()<RandomWaypointModel.probabilityPause) {
 			// node starts paused
 			
 			// determine length of initial pause
 			double initWaitTime = 0;
 			
 			// u ~ uniform (0,1)
-			double u = Simulator.rng.nextDouble();
+			double u = curSimulation.rng.nextDouble();
 			double threshold = RandomWaypointModel.waitTimeDistribution.getMin()/RandomWaypointModel.waitTimeDistribution.getMean();
 			
 			if (u<threshold) initWaitTime = u*RandomWaypointModel.waitTimeDistribution.getMean();
 			else initWaitTime = RandomWaypointModel.waitTimeDistribution.getMax()-Math.sqrt((1-u)*(RandomWaypointModel.waitTimeDistribution.getMax()*RandomWaypointModel.waitTimeDistribution.getMax() - RandomWaypointModel.waitTimeDistribution.getMin()*RandomWaypointModel.waitTimeDistribution.getMin()));
 			
 			// initial position
-			Event join = new Join(this, 0.0, Simulator.rng.nextDouble()*Simulator.size, Simulator.rng.nextDouble()*Simulator.size);
+			Event join = new Join(this, 0.0, curSimulation.rng.nextDouble()*curSimulation.size, curSimulation.rng.nextDouble()*curSimulation.size);
 			addEvent(join);
 			
 			Pause pause = new Pause(this, 0.0, initWaitTime, join.x, join.y);
@@ -83,31 +86,31 @@ public class NodeRWP extends MobileNode {
 			
 			while (reject) {
 				
-				double x1 = Simulator.rng.nextDouble();
-				double x2 = Simulator.rng.nextDouble();
-				double y1 = Simulator.rng.nextDouble();
-				double y2 = Simulator.rng.nextDouble();
+				double x1 = curSimulation.rng.nextDouble();
+				double x2 = curSimulation.rng.nextDouble();
+				double y1 = curSimulation.rng.nextDouble();
+				double y2 = curSimulation.rng.nextDouble();
 				
 				
 				double r = Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))/RandomWaypointModel.maxDistanceNormalized; 
-				double u = Simulator.rng.nextDouble();
+				double u = curSimulation.rng.nextDouble();
 				
 				
 				if (u<r) {
 					// accept initial positions
 					reject = false;
 					
-					u = Simulator.rng.nextDouble();
+					u = curSimulation.rng.nextDouble();
 					// select a random position on the line between (x1,y1) and (x2,y2)
 					double initX = u*x1 + (1-u)*x2;
 					double initY = u*y1 + (1-u)*y2;
 					
 					// initial speed
-					u = Simulator.rng.nextDouble();
+					u = curSimulation.rng.nextDouble();
 					double initSpeed = Math.pow(RandomWaypointModel.velocityDistribution.getMax(), u)/Math.pow(RandomWaypointModel.velocityDistribution.getMin(), u-1);
 					
 					// node joins the simulation
-					Join join = new Join(this, 0.0, Simulator.size*initX, Simulator.size*initY);
+					Join join = new Join(this, 0.0, curSimulation.size*initX, curSimulation.size*initY);
 					addEvent(join);
 					
 
@@ -118,17 +121,17 @@ public class NodeRWP extends MobileNode {
 					double curTime = 0;
 					double startX = join.x;
 					double startY = join.y;
-					double endX = Simulator.size*x2;
-					double endY = Simulator.size*y2;
+					double endX = curSimulation.size*x2;
+					double endY = curSimulation.size*y2;
 
 					double curX;
 					double curY;
 					double prevX = startX;
 					double prevY = startY;
 
-					while (curTime < Simulator.duration - 2) {
-						curX = startX + (endX - startX)*(curTime/Simulator.duration);
-						curY = startY + (endY - startY)*(curTime/Simulator.duration);
+					while (curTime < curSimulation.duration - 2) {
+						curX = startX + (endX - startX)*(curTime/curSimulation.duration);
+						curY = startY + (endY - startY)*(curTime/curSimulation.duration);
 						Move move = new Move(this, 0.0, prevX, prevY, curX, curY, initSpeed);
 						addEvent(move);
 						prevX = curX;
@@ -147,7 +150,7 @@ public class NodeRWP extends MobileNode {
 	public void prepare() {
 		
 		// generate new events until the current simulation time (if necessary)
-		while (lastEventEndTime<=Simulator.time) {
+		while (lastEventEndTime<=curSimulation.time) {
 			
 			// generate the next event
 			if (lastEvent!=null && lastEvent.type==Event.MOVE) {
@@ -160,7 +163,7 @@ public class NodeRWP extends MobileNode {
 			} else if (lastEvent!=null && lastEvent.type==Event.PAUSE) {
 				
 				// generate a new MOVEMENT event
-				Move move = new Move(this, lastEventEndTime, lastEvent.x, lastEvent.y, Simulator.size*Simulator.rng.nextDouble(), Simulator.size*Simulator.rng.nextDouble(), RandomWaypointModel.velocityDistribution.nextValue());
+				Move move = new Move(this, lastEventEndTime, lastEvent.x, lastEvent.y, curSimulation.size*curSimulation.rng.nextDouble(), curSimulation.size*curSimulation.rng.nextDouble(), RandomWaypointModel.velocityDistribution.nextValue());
 				addEvent(move);
 				
 			}
@@ -174,8 +177,8 @@ public class NodeRWP extends MobileNode {
 	}
 	
 	public void finish() {
-		addEvent(new Leave(this, Simulator.duration, x, y));
-		Simulator.removeNode(Simulator.duration, this);
+		addEvent(new Leave(this, curSimulation.duration, x, y));
+		curSimulation.removeNode(curSimulation.duration, this);
 		super.finish();
 	}
 	

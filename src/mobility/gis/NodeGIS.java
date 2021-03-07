@@ -74,14 +74,17 @@ public class NodeGIS extends MobileNode {
 	
 	// position at last sampling point
 	Position lastPositionXY = new Position();
+	Simulator curSimulation;
 	
 
 	/**
 	 * Creates a new mobile node implementing the GIS based mobility model
 	 * @param id Node identifier
+	 * @param curSimulation
 	 */
-	public NodeGIS(int id) {
-		super(id);
+	public NodeGIS(int id, Simulator curSimulation) {
+		super(id, curSimulation);
+		this.curSimulation = curSimulation;
 	}
 	
 	
@@ -91,7 +94,7 @@ public class NodeGIS extends MobileNode {
 	public void warmup() {
 		
 		// select a start node
-		RoadNode start = GISModel.landscape.getNextDestination();
+		RoadNode start = GISModel.landscape.getNextDestination(curSimulation);
 		
 		lastPositionXY.x = start.x;
 		lastPositionXY.y = start.y;
@@ -101,7 +104,7 @@ public class NodeGIS extends MobileNode {
 		while (route==null) {
 			// find a destination node
 			while (destination==start) {
-				destination = GISModel.landscape.getNextDestination();
+				destination = GISModel.landscape.getNextDestination(curSimulation);
 			}
 			
 			// find the shortest path between source and destination
@@ -112,12 +115,12 @@ public class NodeGIS extends MobileNode {
 		road = route.getNextRoad();
 		
 		// start position
-		position = road.length*Simulator.rng.nextDouble();
+		position = road.length*curSimulation.rng.nextDouble();
 		speed = 0;
 		// enter the current road
 		road.update(this);
 		// set desired speed
-		v_max = road.maxSpeed*(Simulator.rng.nextDouble()*0.05 + 0.95);
+		v_max = road.maxSpeed*(curSimulation.rng.nextDouble()*0.05 + 0.95);
 		
 		
 	}
@@ -200,12 +203,12 @@ public class NodeGIS extends MobileNode {
 	public boolean next() {
 			
 		// update the current speed
-		speed += dv*Simulator.step;
+		speed += dv*curSimulation.step;
 		
 		if (speed<0.01) speed=0;
 		
 		// update the current position
-		position += speed*Simulator.step;
+		position += speed*curSimulation.step;
 		
 		// check if the node is still within this street
 		while (position>=road.length) {
@@ -222,7 +225,7 @@ public class NodeGIS extends MobileNode {
 				
 				road = route.getNextRoad();
 				// set desired speed
-				v_max = road.maxSpeed*(Simulator.rng.nextDouble()*0.05 + 0.95);
+				v_max = road.maxSpeed*(curSimulation.rng.nextDouble()*0.05 + 0.95);
 				
 			} else {
 				
@@ -239,7 +242,7 @@ public class NodeGIS extends MobileNode {
 				while (route==null) {
 					// find a destination node
 					while (destination==start) {
-						destination = GISModel.landscape.getNextDestination();
+						destination = GISModel.landscape.getNextDestination(curSimulation);
 					}
 					// find the shortest path between source and destination
 					route = GISModel.landscape.roadNetwork.getPath(start, destination);
@@ -247,7 +250,7 @@ public class NodeGIS extends MobileNode {
 				
 				road = route.getNextRoad();
 				// set desired speed
-				v_max = road.maxSpeed*(Simulator.rng.nextDouble()*0.05 + 0.95);
+				v_max = road.maxSpeed*(curSimulation.rng.nextDouble()*0.05 + 0.95);
 				
 			}
 			
@@ -264,10 +267,10 @@ public class NodeGIS extends MobileNode {
 		y = positionXY.y;
 		
 		// generate the next event
-		if (!GISModel.warmupPhase && Simulator.time<Simulator.duration) {
+		if (!GISModel.warmupPhase && curSimulation.time<curSimulation.duration) {
 			
-			if (speed>0) addEvent(new Move(this, Simulator.time, lastPositionXY.x, lastPositionXY.y, positionXY.x, positionXY.y, speed, Simulator.step));
-			else addEvent(new Pause(this, Simulator.time, Simulator.step, positionXY.x, positionXY.y));
+			if (speed>0) addEvent(new Move(this, curSimulation.time, lastPositionXY.x, lastPositionXY.y, positionXY.x, positionXY.y, speed, curSimulation.step));
+			else addEvent(new Pause(this, curSimulation.time, curSimulation.step, positionXY.x, positionXY.y));
 		}
 		
 	
@@ -280,8 +283,8 @@ public class NodeGIS extends MobileNode {
 	
 	
 	public void finish() {
-		addEvent(new Leave(this, Simulator.duration, x, y));
-		Simulator.removeNode(Simulator.duration, this);
+		addEvent(new Leave(this, curSimulation.duration, x, y));
+		curSimulation.removeNode(curSimulation.duration, this);
 		super.finish();
 	}
 	

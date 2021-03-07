@@ -50,24 +50,29 @@ public class NS2Formatter extends TraceFormatter{
 
 	/** maximum node identifier value */
 	int maxNodeId = 0;
-	
-	
-	public void finish() {
+	Simulator curSimulation;
+
+    public NS2Formatter(Simulator simulator) {
+    	this.curSimulation = simulator;
+    }
+
+
+    public void finish() {
 		
 		/** buffered output writer */
 		BufferedWriter writer = null;
 		
 		try {
-			writer = new BufferedWriter(new FileWriter(new File(Simulator.outputDirectory + "/trace.mov")));
+			writer = new BufferedWriter(new FileWriter(new File(curSimulation.outputDirectory + "/trace.mov")));
 	    } catch (Exception e) {
 	    	System.err.println(e.getLocalizedMessage());
 	    }
 		
 	    // sort events by start time
-		Collections.sort(Simulator.events, new EventComparatorByStartTime());
+		Collections.sort(curSimulation.events, new EventComparatorByStartTime());
 	    
 	    // output node initialization section (t=0)
-	 	Iterator<Event> it = Simulator.events.iterator();
+	 	Iterator<Event> it = curSimulation.events.iterator();
 		while (it.hasNext()) {
 			
 			Event event = it.next();
@@ -87,7 +92,7 @@ public class NS2Formatter extends TraceFormatter{
 		
 		
 		// iteration over all events
-		it = Simulator.events.iterator();
+		it = curSimulation.events.iterator();
 		while (it.hasNext()) {
 			
 			Event event = it.next();

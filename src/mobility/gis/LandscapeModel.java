@@ -52,8 +52,8 @@ public class LandscapeModel {
 	 * Returns a random destination point in the map
 	 * @return Intersection which is next to the random destination point
 	 */
-	public RoadNode getNextDestination() {
-		return destinations.get(Simulator.rng.nextInt(destinations.size()));
+	public RoadNode getNextDestination(Simulator curSimulation) {
+		return destinations.get(curSimulation.rng.nextInt(destinations.size()));
 	}
 	
 	

@@ -44,13 +44,15 @@ public class NodeManhattan extends MobileNode {
 	
 	Position lastPositionXY = null;
 	double dv = 0;
+	Simulator curSimulation;
 	
 	/**
 	 * Creates a new node implementing the Manhattan mobility model
 	 * @param id unique node identifier
 	 */
-	public NodeManhattan(int id) {
-		super(id);
+	public NodeManhattan(int id, Simulator curSimulation) {
+		super(id, curSimulation);
+		this.curSimulation = curSimulation;
 	}
 	
 	
@@ -58,8 +60,8 @@ public class NodeManhattan extends MobileNode {
 		
 				
 		// select a start node
-		road = ManhattanModel.roadNetwork.getEdges().get(Simulator.rng.nextInt(ManhattanModel.roadNetwork.getEdges().size()));
-		position = Simulator.rng.nextDouble()*road.length;
+		road = ManhattanModel.roadNetwork.getEdges().get(curSimulation.rng.nextInt(ManhattanModel.roadNetwork.getEdges().size()));
+		position = curSimulation.rng.nextDouble()*road.length;
 		Position posXY= road.getPosition(this);
 		
 		lastPositionXY = posXY;
@@ -77,7 +79,7 @@ public class NodeManhattan extends MobileNode {
 	
 	public void prepare() {
 			// update node velocity
-			dv = (2*Simulator.rng.nextDouble() - 1)*ManhattanModel.acceleration;
+			dv = (2*curSimulation.rng.nextDouble() - 1)*ManhattanModel.acceleration;
 			
 			// find preceeding driver
 			MobileNode preceedingDriver = road.getFrontVehicle(this);
@@ -98,7 +100,7 @@ public class NodeManhattan extends MobileNode {
 		if (speed<ManhattanModel.speedMin) speed = ManhattanModel.speedMin;
 		if (speed>ManhattanModel.speedMax) speed = ManhattanModel.speedMax;
 		
-		position+=speed*Simulator.step;
+		position+=speed*curSimulation.step;
 		
 		//System.out.println("velocity: " + velocity);
 		
@@ -109,7 +111,7 @@ public class NodeManhattan extends MobileNode {
 			
 			Iterator<RoadEdge> it = road.getEndNode().getOutEdges().iterator();
 			
-			int direction = Simulator.rng.nextInt(4);
+			int direction = curSimulation.rng.nextInt(4);
 			
 			while (it.hasNext()) {
 			
@@ -189,7 +191,7 @@ public class NodeManhattan extends MobileNode {
 		
 		
 		// generate a new MOVE event
-		if (!ManhattanModel.warmupPhase && Simulator.time<Simulator.duration) addEvent(new Move(this, Simulator.time, lastPositionXY.x, lastPositionXY.y, posXY.x, posXY.y, speed));
+		if (!ManhattanModel.warmupPhase && curSimulation.time<curSimulation.duration) addEvent(new Move(this, curSimulation.time, lastPositionXY.x, lastPositionXY.y, posXY.x, posXY.y, speed));
 		
 		lastPositionXY = posXY;
 		
@@ -200,8 +202,8 @@ public class NodeManhattan extends MobileNode {
 	 * Clean-up after the end of the simulation 
 	 **/
 	public void finish() {
-		addEvent(new Leave(this, Simulator.duration, x, y));
-		Simulator.removeNode(Simulator.duration, this);
+		addEvent(new Leave(this, curSimulation.duration, x, y));
+		curSimulation.removeNode(curSimulation.duration, this);
 		super.finish();
 	}
 	
